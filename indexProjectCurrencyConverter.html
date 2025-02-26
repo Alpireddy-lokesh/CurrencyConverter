@@ -1,0 +1,121 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter</title>
+    <style>
+        body {
+            background-color: #f5e6c8;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 350px;
+        }
+        select, input, button {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .flag {
+            width: 30px;
+            height: 20px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        .convert-btn {
+            background-color: #a14caf;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+        }
+        .currency-selection {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Currency Converter</h2>
+        <label>Enter Amount</label>
+        <input type="number" id="amount" placeholder="Enter amount" />
+        <div class="currency-selection">
+            <label>From</label>
+            <img id="fromFlag" class="flag">
+            <select id="fromCurrency"></select>
+            <span>⇄</span>
+            <label>To</label>
+            <img id="toFlag" class="flag">
+            <select id="toCurrency"></select>
+        </div>
+        <p id="result">1 USD = 80 INR</p>
+        <button class="convert-btn" onclick="convertCurrency()">Get Exchange Rate</button>
+    </div>
+    <script>
+        const currencySelects = document.querySelectorAll("select");
+        const fromFlag = document.getElementById("fromFlag");
+        const toFlag = document.getElementById("toFlag");
+        
+        async function loadCurrencies() {
+            const response = await fetch("https://open.er-api.com/v6/latest/USD");
+            const data = await response.json();
+            const currencies = Object.keys(data.rates);
+            
+            currencySelects.forEach(select => {
+                currencies.forEach(currency => {
+                    const option = document.createElement("option");
+                    option.value = currency;
+                    option.textContent = currency;
+                    select.appendChild(option);
+                });
+            });
+            
+            currencySelects[0].value = "USD";
+            currencySelects[1].value = "INR";
+            updateFlags();
+        }
+        
+        function updateFlags() {
+            const fromCurrency = document.getElementById("fromCurrency").value.toLowerCase();
+            const toCurrency = document.getElementById("toCurrency").value.toLowerCase();
+            
+            fromFlag.src = `https://flagcdn.com/w40/${fromCurrency.slice(0, 2)}.png`;
+            toFlag.src = `https://flagcdn.com/w40/${toCurrency.slice(0, 2)}.png`;
+        }
+        
+        async function convertCurrency() {
+            const from = document.getElementById("fromCurrency").value;
+            const to = document.getElementById("toCurrency").value;
+            const amount = document.getElementById("amount").value || 1;
+            
+            const response = await fetch(`https://open.er-api.com/v6/latest/${from}`);
+            const data = await response.json();
+            const rate = data.rates[to];
+            
+            document.getElementById("result").textContent = `${amount} ${from} = ${(amount * rate).toFixed(2)} ${to}`;
+            updateFlags();
+        }
+        
+        document.getElementById("fromCurrency").addEventListener("change", updateFlags);
+        document.getElementById("toCurrency").addEventListener("change", updateFlags);
+        
+        loadCurrencies();
+    </script>
+</body>
+</html>
